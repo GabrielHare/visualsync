@@ -1,0 +1,5 @@
+# PyTorch weights
+*.pt
+
+# PyTorch model states (WARNING: executable)
+*.pth
