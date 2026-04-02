@@ -14,21 +14,34 @@ import argparse
 
 def convert_to_json_serializable(obj):
     """Recursively convert numpy types to JSON-serializable Python types."""
+    # Check for numpy array first
     if isinstance(obj, np.ndarray):
-        # Convert array to list first, then recursively convert elements
-        return [convert_to_json_serializable(item) for item in obj.tolist()]
-    elif isinstance(obj, (np.integer, np.int64, np.int32, np.int16, np.int8)):
+        # Check if it's an object array (contains dicts or other objects)
+        if obj.dtype == np.object_:
+            # Recursively convert each element
+            return [convert_to_json_serializable(item) for item in obj]
+        else:
+            # Numeric array - convert to list
+            return obj.tolist()
+    # Check for numpy scalar types
+    elif isinstance(obj, (np.integer, np.int64, np.int32, np.int16, np.int8, np.uint64, np.uint32, np.uint16, np.uint8)):
         return int(obj)
     elif isinstance(obj, (np.floating, np.float64, np.float32, np.float16)):
         return float(obj)
-    elif isinstance(obj, np.str_):
+    elif isinstance(obj, (np.str_, np.unicode_)):
         return str(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    # Check for dict
     elif isinstance(obj, dict):
         return {str(key): convert_to_json_serializable(value) for key, value in obj.items()}
+    # Check for list/tuple
     elif isinstance(obj, (list, tuple)):
         return [convert_to_json_serializable(item) for item in obj]
+    # Check for bytes
     elif isinstance(obj, bytes):
         return obj.decode('utf-8')
+    # Everything else
     else:
         return obj
 
