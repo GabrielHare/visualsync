@@ -174,7 +174,7 @@ There are multiple ways for video dynamic object segmentation. Here we follow [U
 
 ## 3. Camera Pose Estimation
 
-- Run VGG-T to get camera pose estimation. Beside saving the camera parameters, it will also save the visualization as colmap format under `vggt_output` directory for visualization or debug.
+- Run VGG-T to get camera pose estimation. Besides saving the camera parameters, it will also save the visualization as colmap format under `vggt_output` directory for visualization or debug.
     ```bash
     python preprocess/vggt_to_colmap.py --workdir data/Z5TlCImQNK0 --vis_path vggt_output --save_colmap
     ```
@@ -184,8 +184,14 @@ There are multiple ways for video dynamic object segmentation. Here we follow [U
 - [ ] TODO: Find and run for all cameras, assuming this directory structure
   ![tracking](assets/Z5TlCImQNK0_150_200_track.gif)
 
-## 5. Run Synchronization
-- Run Mast3r to get synchronization results: ??
+## 5. Pixel Correspondence
+- Run Mast3r to get synchronization results: `python scripts/run_mast3r_matching.py   --cam1_dir ../test-rectified-images/scene1_cam1   --cam2_dir ../test-rectified-images/scene1_cam2   --num_keyframes 10 > ../run_mast3r_matching.log 2>&1`
+- [ ] TODO: Pick first camera (or assume _cam1) and then calibrate the remainder relative to it.
+- npz_to_json.py will convert the output to json format: `python scripts/npz_to_json.py ../test-rectified-images/scene1_cam1/mast3r/cross_view_correspondences.npz --pretty`
+- [ ] TODO: Explanation of npz/json file contents.
+
+## 6. Synchronization
+- [ ] TODO: Compute error function (Sampson or other) using data
 
 ## Citation
 ```BiBTeX
