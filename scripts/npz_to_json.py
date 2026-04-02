@@ -28,7 +28,7 @@ def convert_to_json_serializable(obj):
         return int(obj)
     elif isinstance(obj, (np.floating, np.float64, np.float32, np.float16)):
         return float(obj)
-    elif isinstance(obj, (np.str_, np.unicode_)):
+    elif isinstance(obj, np.str_):
         return str(obj)
     elif isinstance(obj, np.bool_):
         return bool(obj)
