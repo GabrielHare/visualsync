@@ -141,7 +141,14 @@ if __name__ == "__main__":
             backward_tracking=args.backward_tracking,
             segm_mask=segm_mask,
         )
+        num_tracks = pred_tracks.shape[2]
         print(f"  Computed tracks: {pred_tracks.shape}, visibility: {pred_visibility.shape}")
+
+        # Skip if no tracks found
+        # NOTE: This can happen when the masked region is very small
+        if num_tracks == 0:
+            print(f"  ⚠ Skipping instance {instance_id} - no tracks found (mask may be too small)")
+            continue
 
         # Save results
         output_file = os.path.join(output_dir, f"tracks{suffix}.npz")
