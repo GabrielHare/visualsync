@@ -33,6 +33,9 @@ def load_masks_from_dir(mask_dir, num_frames):
     masks = []
     for path in mask_paths[:num_frames]:
         mask = np.array(Image.open(path))
+        # If RGB/RGBA, convert to grayscale by taking first channel
+        if mask.ndim == 3:
+            mask = mask[..., 0]
         masks.append(mask)
 
     return np.stack(masks)  # Shape: (T, H, W)
