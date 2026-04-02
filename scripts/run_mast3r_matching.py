@@ -86,8 +86,14 @@ def match_frames(model, frame1_path, frame2_path, device, size=512):
     )
 
     valid_matches = valid_matches_im0 & valid_matches_im1
-    matches_im0 = matches_im0[valid_matches].cpu().numpy()
-    matches_im1 = matches_im1[valid_matches].cpu().numpy()
+    matches_im0 = matches_im0[valid_matches]
+    matches_im1 = matches_im1[valid_matches]
+
+    # Convert to numpy if torch tensor
+    if torch.is_tensor(matches_im0):
+        matches_im0 = matches_im0.cpu().numpy()
+    if torch.is_tensor(matches_im1):
+        matches_im1 = matches_im1.cpu().numpy()
 
     return matches_im0, matches_im1
 
