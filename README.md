@@ -179,10 +179,13 @@ There are multiple ways for video dynamic object segmentation. Here we follow [U
     python preprocess/vggt_to_colmap.py --workdir data/Z5TlCImQNK0 --vis_path vggt_output --save_colmap
     ```
 ## 4. Pixel-level Tracking 
-- Run CoTracker3 to get tracking results:
-
+- Merge frame images back in to vides: `./scripts/merge_frames.sh ../data/Z5TlCImQNK0`
+- Run CoTracker3 to get tracking results for EACH camera: `python scripts/run_cotracker.py   --video_path ../test-rectified-images/scene1_cam2.mp4   --mask_dir ../test-rectified-images/scene1_cam2/gsam2/mask/   --grid_size 10   --visualize`
+- [ ] TODO: Find and run for all cameras, assuming this directory structure
   ![tracking](assets/Z5TlCImQNK0_150_200_track.gif)
 
+## 5. Run Synchronization
+- Run Mast3r to get synchronization results: ??
 
 ## Citation
 ```BiBTeX
