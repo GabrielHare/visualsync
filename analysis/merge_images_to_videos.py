@@ -33,7 +33,7 @@ CODEC_EXTENSIONS = {
 
 
 
-def get_video_dimensions(first_image_path: str) -> Tuple[int, int]:
+def get_video_dimensions(first_image_path: Path) -> Tuple[int, int]:
     """Read the first image to get video dimensions."""
     img = cv2.imread(first_image_path)
     if img is None:
@@ -43,7 +43,7 @@ def get_video_dimensions(first_image_path: str) -> Tuple[int, int]:
 
 
 def create_video_from_images(
-    image_files: List[str],
+    image_files_enum: List[Tuple[int, Path]],
     output_path: str,
     fps: int = 30,
     codec: str = 'mp4v'
@@ -52,7 +52,7 @@ def create_video_from_images(
     Create a video from the sequence of images using OpenCV.
 
     Args:
-        image_files: List of image file paths (sorted)
+        image_files_enum: List of image file paths (enumerated and sorted)
         output_path: Output video file path
         fps: Frames per second (default: 30)
         codec: Video codec fourcc code (default: 'mp4v')
@@ -60,12 +60,12 @@ def create_video_from_images(
     Returns:
         bool: True if successful, False otherwise
     """
-    if not image_files:
+    if not image_files_enum:
         return False
 
     try:
         # Get video dimensions from the first image
-        width, height = get_video_dimensions(image_files[0])
+        width, height = get_video_dimensions(image_files_enum[0][1])
 
         # Define codec and create VideoWriter
         fourcc = cv2.VideoWriter_fourcc(*codec)
@@ -76,7 +76,7 @@ def create_video_from_images(
             return False
 
         # Write each frame
-        for i, image_file in enumerate(image_files):
+        for i, image_file in image_files_enum:
             img = cv2.imread(image_file)
 
             if img is None:
@@ -100,9 +100,10 @@ def create_video_from_images(
 def process_directory(
     workdir: Union[str, Path],
     fps: int = 30,
-    images_subdir_name: str = 'rgb',
-    image_format:str = 'jpg',
-    video_codec: str = 'mp4v'
+    video_codec: str = 'mp4v',
+    image_format: str = 'jpg',
+    image_subdir: str = 'rgb',
+    image_prefix: str = 'frame'
 ) -> int:
     """
     Process all subdirectories in the workdir, creating videos from image sequences.
@@ -110,9 +111,10 @@ def process_directory(
     Args:
         workdir: Parent directory containing scene subdirectories
         fps: Frames per second for output videos
-        images_subdir_name: Name of the directory containing image frames
-        image_format: Image file extension to process
         video_codec: Video codec to use
+        image_format: Image file extension to process
+        image_subdir: Name of the subdirectory containing image frames
+        image_prefix: Uniform prefix for image filenames
 
     Returns:
         int: Number of successfully created videos, < 0 if an error occurred
@@ -139,26 +141,38 @@ def process_directory(
     for subdir in sorted(subdirs):
         video_name = subdir.name
         # The expected image frames directory
-        images_dir_path = subdir / images_subdir_name
+        images_root = subdir / image_subdir
 
         # Check if images_dir_path exists
-        if not images_dir_path.exists():
+        if not images_root.exists():
             print(f"Skipping '{video_name}' - no images folder found")
             continue
 
         # Get image files
-        image_files = glob.glob(os.path.join(images_dir_path, f"*.{image_format}"))
-        if not image_files:
+        image_suffix = f".{image_format}"
+        image_files_str = glob.glob(os.path.join(images_root, image_suffix))
+        if not image_files_str:
             print(f"Skipping '{video_name}' - no image files found in images folder")
             continue
-        print(f"Processing '{video_name}' ({len(image_files)} frames)...")
+        print(f"Processing '{video_name}' ({len(image_files_str)} frames)...")
+
+        image_files_enum = [
+            (
+                int(Path(s).name.lstrip(image_prefix).rstrip(image_suffix)),
+                Path(s)
+            )
+            for p in image_files_str
+        ]
+        image_files_enum.sort(key=lambda p: p[0])
+        if len(image_files_enum) -1 != image_files_enum[-1][0] - image_files_enum[-2][0]:
+            print(f"Warning: Missing frames in '{video_name}'")
 
         # Create output video path with appropriate extension for codec
         output_path = workdir / f"{video_name}{extension}"
 
         # Create video
         success = create_video_from_images(
-            image_files,
+            image_files_enum,
             str(output_path),
             fps=fps,
             codec=video_codec
@@ -198,7 +212,7 @@ Examples:
     )
 
     parser.add_argument(
-        '--codec',
+        '--vide_codec',
         type=str,
         default='mp4v',
         choices=['mp4v', 'avc1', 'h264', 'xvid'],
@@ -206,14 +220,7 @@ Examples:
     )
 
     parser.add_argument(
-        '--fps',
-        type=int,
-        default=30,
-        help='Frames per second for output videos (default: 30)'
-    )
-
-    parser.add_argument(
-        '--format',
+        '--image_format',
         type=str,
         default='jpg',
         choices=['jpg', 'png', 'bmp'],
@@ -221,10 +228,17 @@ Examples:
     )
 
     parser.add_argument(
-        '--subdir',
+        '--image_subdir',
         type=str,
         default='rgb',
         help='Images subdirectory name (default: rgb)'
+    )
+
+    parser.add_argument(
+        '--image_prefix',
+        type=str,
+        default='frame',
+        help='Images name prefix (default: frame)'
     )
 
     args = parser.parse_args()
@@ -233,7 +247,14 @@ Examples:
     print(f"Settings: {args.fps} fps, codec: {args.codec}")
     print()
 
-    success_count = process_directory(args.directory, fps=args.fps, images_subdir_name=args.subdir, image_format=args.format, video_codec=args.codec)
+    success_count = process_directory(
+        args.directory,
+        fps=args.fps,
+        video_codec=args.video_codec,
+        image_format=args.image_format,
+        image_subdir=args.image_subdir,
+        image_prefix=args.image_prefix
+    )
 
     print()
     print("=" * 60)
