@@ -57,7 +57,7 @@ This repository contains the pytorch implementation for the paper [VisualSync: M
     ```
 
 - Install Conda Environment
-    > **Note:** This installation is tested to work with **CUDA 12.4**.
+    > **Note:** This installation is tested to work with **CUDA 13.0**.
     ```bash
     bash scripts/install.sh # create conda env visualsync
     conda activate visualsync
