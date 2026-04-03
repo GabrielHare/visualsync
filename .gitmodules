@@ -9,10 +9,6 @@
 	path = vggt
 	url = https://github.com/facebookresearch/vggt.git
 	branch = main
-[submodule "vggt"]
-	path = co-tracker
-	url = https://github.com/facebookresearch/co-tracker
-	branch = main
 [submodule "mast3r"]
 	path = mast3r
 	url = https://github.com/naver/mast3r
