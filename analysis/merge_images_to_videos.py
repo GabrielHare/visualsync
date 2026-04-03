@@ -3,7 +3,7 @@
 Combine image sequences into videos for all subdirectories.
 
 This script processes a directory containing scene subdirectories,
-each with an 'rgb' folder containing sequential image frames.
+each with a 'rgb' folder containing sequential image frames.
 It creates MP4 videos from these image sequences using OpenCV.
 
 Usage:
@@ -23,20 +23,18 @@ import cv2
 import numpy as np
 
 
-def get_image_files(rgb_dir: str) -> List[str]:
-    """Get sorted list of image files from directory."""
-    # Support common image extensions
-    patterns = ['*.jpg', '*.JPG', '*.jpeg', '*.JPEG', '*.png', '*.PNG']
-    image_files = []
+# Mapping of codec to file extension
+CODEC_EXTENSIONS = {
+    'mp4v': '.mp4',
+    'avc1': '.mp4',
+    'h264': '.mp4',
+    'xvid': '.avi',
+}
 
-    for pattern in patterns:
-        image_files.extend(glob.glob(os.path.join(rgb_dir, pattern)))
-
-    return sorted(image_files)
 
 
 def get_video_dimensions(first_image_path: str) -> Tuple[int, int]:
-    """Read first image to get video dimensions."""
+    """Read the first image to get video dimensions."""
     img = cv2.imread(first_image_path)
     if img is None:
         raise ValueError(f"Could not read image: {first_image_path}")
@@ -51,7 +49,7 @@ def create_video_from_images(
     codec: str = 'mp4v'
 ) -> bool:
     """
-    Create video from sequence of images using OpenCV.
+    Create a video from the sequence of images using OpenCV.
 
     Args:
         image_files: List of image file paths (sorted)
@@ -66,7 +64,7 @@ def create_video_from_images(
         return False
 
     try:
-        # Get video dimensions from first image
+        # Get video dimensions from the first image
         width, height = get_video_dimensions(image_files[0])
 
         # Define codec and create VideoWriter
@@ -102,68 +100,75 @@ def create_video_from_images(
 def process_directory(
     workdir: Union[str, Path],
     fps: int = 30,
-    codec: str = 'mp4v'
+    images_subdir_name: str = 'rgb',
+    image_format:str = 'jpg',
+    video_codec: str = 'mp4v'
 ) -> int:
     """
-    Process all subdirectories in workdir, creating videos from image sequences.
+    Process all subdirectories in the workdir, creating videos from image sequences.
 
     Args:
         workdir: Parent directory containing scene subdirectories
         fps: Frames per second for output videos
-        codec: Video codec to use
+        images_subdir_name: Name of the directory containing image frames
+        image_format: Image file extension to process
+        video_codec: Video codec to use
 
     Returns:
-        int: Number of successfully created videos
+        int: Number of successfully created videos, < 0 if an error occurred
     """
     workdir = Path(workdir)
 
     if not workdir.exists() or not workdir.is_dir():
         print(f"Error: Directory '{workdir}' does not exist")
-        return 0
+        return -1
+
+    extension = CODEC_EXTENSIONS.get(video_codec)
+    if extension is None:
+        print(f"Warning: Unsupported video codec: {video_codec}")
+        return -1
 
     success_count = 0
 
     # Find all subdirectories
     subdirs = [d for d in workdir.iterdir() if d.is_dir()]
-
-    if not subdirs:
+    if len(subdirs) == 0:
         print(f"No subdirectories found in {workdir}")
-        return 0
+        return -1
 
     for subdir in sorted(subdirs):
-        dirname = subdir.name
-        rgb_dir = subdir / 'rgb'
+        video_name = subdir.name
+        # The expected image frames directory
+        images_dir_path = subdir / images_subdir_name
 
-        # Check if rgb folder exists
-        if not rgb_dir.exists():
-            print(f"Skipping '{dirname}' - no rgb folder found")
+        # Check if images_dir_path exists
+        if not images_dir_path.exists():
+            print(f"Skipping '{video_name}' - no images folder found")
             continue
 
         # Get image files
-        image_files = get_image_files(str(rgb_dir))
-
+        image_files = glob.glob(os.path.join(images_dir_path, f"*.{image_format}"))
         if not image_files:
-            print(f"Skipping '{dirname}' - no image files found in rgb folder")
+            print(f"Skipping '{video_name}' - no image files found in images folder")
             continue
+        print(f"Processing '{video_name}' ({len(image_files)} frames)...")
 
-        print(f"Processing '{dirname}' ({len(image_files)} frames)...")
-
-        # Create output video path
-        output_path = workdir / f"{dirname}.mp4"
+        # Create output video path with appropriate extension for codec
+        output_path = workdir / f"{video_name}{extension}"
 
         # Create video
         success = create_video_from_images(
             image_files,
             str(output_path),
             fps=fps,
-            codec=codec
+            codec=video_codec
         )
 
         if success:
             print(f"  ✓ Created {output_path}")
             success_count += 1
         else:
-            print(f"  ✗ Failed to create video for '{dirname}'")
+            print(f"  ✗ Failed to create video for '{video_name}'")
 
     return success_count
 
@@ -182,7 +187,7 @@ Examples:
 
     parser.add_argument(
         'directory',
-        help='Parent directory containing scene subdirectories with rgb/ folders'
+        help='Parent directory containing scene subdirectories video frame images'
     )
 
     parser.add_argument(
@@ -200,19 +205,44 @@ Examples:
         help='Video codec fourcc code (default: mp4v)'
     )
 
+    parser.add_argument(
+        '--fps',
+        type=int,
+        default=30,
+        help='Frames per second for output videos (default: 30)'
+    )
+
+    parser.add_argument(
+        '--format',
+        type=str,
+        default='jpg',
+        choices=['jpg', 'png', 'bmp'],
+        help='Image format (default: jpg)'
+    )
+
+    parser.add_argument(
+        '--subdir',
+        type=str,
+        default='rgb',
+        help='Images subdirectory name (default: rgb)'
+    )
+
     args = parser.parse_args()
 
     print(f"Processing directory: {args.directory}")
     print(f"Settings: {args.fps} fps, codec: {args.codec}")
     print()
 
-    success_count = process_directory(args.directory, fps=args.fps, codec=args.codec)
+    success_count = process_directory(args.directory, fps=args.fps, images_subdir_name=args.subdir, image_format=args.format, video_codec=args.codec)
 
     print()
     print("=" * 60)
     print(f"Video creation complete!")
-    print(f"Successfully created {success_count} video(s)")
-    print(f"Videos saved to: {args.directory}/")
+    if success_count > 0:
+        print(f"Successfully created {success_count} video(s)")
+        print(f"Videos saved to: {args.directory}/")
+    else:
+        print(f"Unable to create video(s)")
     print("=" * 60)
 
 
