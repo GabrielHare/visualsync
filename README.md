@@ -99,7 +99,7 @@ We show how to synchronize 3 EFL views.
 
 ### Step-2: Pairwise synchronization
 ---
-- Visualize the energy landscape, the X-axis is the offsete, Y-axis is the synchronization Sampson error.
+- Visualize the energy landscape, the X-axis is the offset, Y-axis is the synchronization Sampson error.
 <!-- ![energy-landscape](assets/pairwise_energy.png) -->
 <p align="center">
   <img src="assets/pairwise_energy.png" alt="key-frames" width="50%">
@@ -162,6 +162,13 @@ There are multiple ways for video dynamic object segmentation. Here we follow [U
     ```bash
     python preprocess/run_dino_sam2.py --workdir data/Z5TlCImQNK0
     ```
+    
+    - [ ] TODO: Download the model in advance!
+    ```
+    Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+    WARNING:huggingface_hub.utils._http:Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+    ```
+
 - 4. [Optional] Run DEVA to track dynamic objects (bypass by running video segmentation in SAM2)
     ```bash
     cd Tracking-Anything-with-DEVA/
@@ -175,19 +182,38 @@ There are multiple ways for video dynamic object segmentation. Here we follow [U
 ## 3. Camera Pose Estimation
 
 - Run VGG-T to get camera pose estimation. Besides saving the camera parameters, it will also save the visualization as colmap format under `vggt_output` directory for visualization or debug.
-    ```bash
-    python preprocess/vggt_to_colmap.py --workdir data/Z5TlCImQNK0 --vis_path vggt_output --save_colmap
-    ```
+  ```bash
+  python preprocess/vggt_to_colmap.py --workdir ../data/Z5TlCImQNK0 --vis_path ../vggt_output --save_colmap
+  ```
+
 ## 4. Pixel-level Tracking 
-- Merge frame images back in to vides: `./scripts/merge_frames.sh ../data/Z5TlCImQNK0`
-- Run CoTracker3 to get tracking results for EACH camera: `python scripts/run_cotracker.py   --video_path ../test-rectified-images/scene1_cam2.mp4   --mask_dir ../test-rectified-images/scene1_cam2/gsam2/mask/   --grid_size 10   --visualize`
+- Merge frame images back in to videos:
+  ```bash
+  python analysis/merge_images_to_videos.sh ../data/Z5TlCImQNK0
+  ```
+
+- Run CoTracker3 to get tracking results for EACH camera:
+  ```bash
+  python analysis/run_cotracker.py --video_path ../data/Z5TlCImQNK0/scene1_cam1.mp4 --mask_dir ../data/Z5TlCImQNK0/scene1_cam1/gsam2/mask/ --grid_size 100 --visualize
+  ```
+
 - [ ] TODO: Find and run for all cameras, assuming this directory structure
+
   ![tracking](assets/Z5TlCImQNK0_150_200_track.gif)
 
-## 5. Pixel Correspondence
-- Run Mast3r to get synchronization results: `python scripts/run_mast3r_matching.py   --cam1_dir ../test-rectified-images/scene1_cam1   --cam2_dir ../test-rectified-images/scene1_cam2   --num_keyframes 10 > ../run_mast3r_matching.log 2>&1`
+## 5. Pixel Correspondence (THIS SHOULD RUN FIRST to established points for cotracker)
+- [ ] TODO: Instead of specifying a pair of cameras, this should be run for the initial frame of all cameras.
+- [ ] TODO: Provide a matching visualization analogous to the demo
+
+- Run Mast3r to get synchronization results:
+  ```bash
+  python analysis/run_mast3r_matching.py --cam1_dir ../data/Z5TlCImQNK0/scene1_cam1 --cam2_dir ../data/Z5TlCImQNK0/scene1_cam2 --num_keyframes 10 > ../run_mast3r_matching.log 2>&1
+  ```
 - [ ] TODO: Pick first camera (or assume _cam1) and then calibrate the remainder relative to it.
-- npz_to_json.py will convert the output to json format: `python scripts/npz_to_json.py ../test-rectified-images/scene1_cam1/mast3r/cross_view_correspondences.npz --pretty`
+- npz_to_json.py will convert the output to json format (output is only in the cam1 directory):
+  ```bash
+  python analysis/npz_to_json.py ../data/Z5TlCImQNK0/scene1_cam1/mast3r/cross_view_correspondences.npz --pretty
+  ```
 - [ ] TODO: Explanation of npz/json file contents.
 
 ## 6. Synchronization

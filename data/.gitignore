@@ -1,0 +1,3 @@
+# Ignore everything in this directory - use it for IDE accessible analysis
+./*
+!.gitignore
