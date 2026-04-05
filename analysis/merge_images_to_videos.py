@@ -161,7 +161,7 @@ def process_directory(
                 int(Path(s).name.lstrip(image_prefix).rstrip(image_suffix)),
                 Path(s)
             )
-            for p in image_files_str
+            for s in image_files_str
         ]
         image_files_enum.sort(key=lambda p: p[0])
         if len(image_files_enum) -1 != image_files_enum[-1][0] - image_files_enum[-2][0]:
