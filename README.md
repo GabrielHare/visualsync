@@ -186,6 +186,9 @@ There are multiple ways for video dynamic object segmentation. Here we follow [U
   python preprocess/vggt_to_colmap.py --workdir ../data/Z5TlCImQNK0 --vis_path ../vggt_output --save_colmap
   ```
 
+- [ ] TODO: Replace this output with OpenCV alignment in the case of static cameras
+- In the case of a dynamic camera, there might also be a geometrically derived alternative
+
 ## 4. Pixel-level Tracking 
 - Merge frame images back in to videos:
   ```bash
@@ -201,9 +204,12 @@ There are multiple ways for video dynamic object segmentation. Here we follow [U
 
   ![tracking](assets/Z5TlCImQNK0_150_200_track.gif)
 
-## 5. Pixel Correspondence (THIS SHOULD RUN FIRST to established points for cotracker)
+## 5. Pixel Correspondence
 - [ ] TODO: Instead of specifying a pair of cameras, this should be run for the initial frame of all cameras.
 - [ ] TODO: Provide a matching visualization analogous to the demo
+
+- NOTE: MASt3R is run after CoTracker in the paper. 
+- Ideally, since it generates correspondences, it would run before.
 
 - Run Mast3r to get synchronization results:
   ```bash
