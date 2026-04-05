@@ -212,7 +212,7 @@ Examples:
     )
 
     parser.add_argument(
-        '--vide_codec',
+        '--video_codec',
         type=str,
         default='mp4v',
         choices=['mp4v', 'avc1', 'h264', 'xvid'],
@@ -244,7 +244,7 @@ Examples:
     args = parser.parse_args()
 
     print(f"Processing directory: {args.directory}")
-    print(f"Settings: {args.fps} fps, codec: {args.codec}")
+    print(f"Settings: {args.fps} fps, codec: {args.video_codec}")
     print()
 
     success_count = process_directory(
