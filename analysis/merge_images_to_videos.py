@@ -25,10 +25,10 @@ import numpy as np
 
 # Mapping of codec to file extension
 CODEC_EXTENSIONS = {
-    'mp4v': '.mp4',
-    'avc1': '.mp4',
-    'h264': '.mp4',
-    'xvid': '.avi',
+    'mp4v': 'mp4',
+    'avc1': 'mp4',
+    'h264': 'mp4',
+    'xvid': 'avi',
 }
 
 
@@ -125,8 +125,8 @@ def process_directory(
         print(f"Error: Directory '{workdir}' does not exist")
         return -1
 
-    extension = CODEC_EXTENSIONS.get(video_codec)
-    if extension is None:
+    video_suffix = f".{CODEC_EXTENSIONS.get(video_codec)}"
+    if video_suffix is None:
         print(f"Warning: Unsupported video codec: {video_codec}")
         return -1
 
@@ -150,7 +150,7 @@ def process_directory(
 
         # Get image files
         image_suffix = f".{image_format}"
-        image_files_str = glob.glob(os.path.join(images_root, image_suffix))
+        image_files_str = glob.glob(os.path.join(images_root, f"*{image_suffix}"))
         if not image_files_str:
             print(f"Skipping '{video_name}' - no image files found in images folder")
             continue
@@ -168,7 +168,7 @@ def process_directory(
             print(f"Warning: Missing frames in '{video_name}'")
 
         # Create output video path with appropriate extension for codec
-        output_path = workdir / f"{video_name}{extension}"
+        output_path = workdir / f"{video_name}{video_suffix}"
 
         # Create video
         success = create_video_from_images(
@@ -190,13 +190,7 @@ def process_directory(
 def main() -> None:
     parser = argparse.ArgumentParser(
         description='Convert image sequences in rgb/ subdirectories into videos',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  %(prog)s test-rectified-images
-  %(prog)s /path/to/data --fps 60
-  %(prog)s ./scenes --codec avc1
-        """
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
 
     parser.add_argument(
