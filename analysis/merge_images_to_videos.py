@@ -164,8 +164,8 @@ def process_directory(
             for s in image_files_str
         ]
         image_files_enum.sort(key=lambda p: p[0])
-        if len(image_files_enum) -1 != image_files_enum[-1][0] - image_files_enum[-2][0]:
-            print(f"Warning: Missing frames in '{video_name}'")
+        if len(image_files_enum) != image_files_enum[-1][0] - image_files_enum[0][0] + 1:
+            print(f"Warning: Missing frames in '{video_name}': found {len(image_files_enum)}, expected {image_files_enum[-1][0] - image_files_enum[0][0] + 1}")
 
         # Create output video path with appropriate extension for codec
         output_path = workdir / f"{video_name}{video_suffix}"
