@@ -64,7 +64,12 @@ if __name__ == "__main__":
         default=None,
         help="directory to save tracking results (default: same as video directory)",
     )
-    parser.add_argument("--grid_size", type=int, default=10, help="Regular grid size")
+    parser.add_argument(
+        "--grid_size",
+        type=int,
+        default=100,
+        help="Regular grid size (default: 100)"
+    )
     parser.add_argument(
         "--grid_query_frame",
         type=int,
